@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaRich User Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* 커스텀 스크롤바 & 애니메이션 */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // ----------------------------------------------------------------------
+        // [System Core] 아이콘 시스템
+        // ----------------------------------------------------------------------
+        
+        const createIcon = (symbol) => ({ className, size, onClick }) => (
+            <span className={className} onClick={onClick} style={{ 
+                fontSize: size ? size + 'px' : '16px', 
+                lineHeight: 1, 
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontStyle: 'normal',
+                cursor: 'pointer'
+            }}>{symbol}</span>
+        );
+
+        const Icons = {
+            User: createIcon("👤"),
+            Lock: createIcon("🔒"),
+            Phone: createIcon("📞"),
+            Calendar: createIcon("📅"),
+            ClipboardList: createIcon("📋"),
+            ArrowLeft: createIcon("←"),
+            CheckCircle2: createIcon("✅"),
+            AlertCircle: createIcon("❗"),
+            LogOut: createIcon("🚪"),
+            Bell: createIcon("🔔"),
+            FileText: createIcon("📄"),
+            Clock: createIcon("🕒"),
+            CreditCard: createIcon("💳"),
+            LayoutDashboard: createIcon("🏠"),
+            Database: createIcon("🗃️"),
+            Send: createIcon("📤"),
+            RotateCcw: createIcon("↩️"),
+            Search: createIcon("🔍"),
+            Filter: createIcon("🌪️"),
+            MoreVertical: createIcon("⋮"),
+            ChevronRight: createIcon("›"),
+            ChevronLeft: createIcon("‹"),
+            ChevronDown: createIcon("⌄"), // [수정] 누락된 아이콘 추가
+            MessageSquare: createIcon("💬"),
+            Plus: createIcon("➕"),
+            Save: createIcon("💾"),
+            ExternalLink: createIcon("🔗"),
+            RefreshCw: createIcon("🔄"),
+            X: createIcon("✕"),
+            KeyRound: createIcon("🔑"),
+            UserPlus: createIcon("➕👤"),
+            HelpCircle: createIcon("❓"),
+            Receipt: createIcon("🧾"),
+            Wallet: createIcon("👛"),
+            Users2: createIcon("👥"),
+            Settings: createIcon("⚙️")
+        };
+
+        const { 
+            User, Lock, Phone, Calendar, ClipboardList, ArrowLeft, CheckCircle2, AlertCircle,
+            LogOut, Bell, FileText, Clock, CreditCard, LayoutDashboard, Database, Send, 
+            RotateCcw, Search, Filter, MoreVertical, ChevronRight, ChevronLeft, ChevronDown, // [수정] 누락된 아이콘 추가
+            MessageSquare, Plus, Save, ExternalLink, RefreshCw, X, KeyRound, UserPlus, HelpCircle, Receipt, 
+            Wallet, Users2, Settings
+        } = Icons;
+
+        const API_URL = ""; 
+
+        // ----------------------------------------------------------------------
+        // [View Components]
+        // ----------------------------------------------------------------------
+
+        // 1. 로그인 뷰
+        const LoginView = ({ onLogin, loading }) => {
+            const [id, setId] = React.useState('');
+            const [pw, setPw] = React.useState('');
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter') onLogin(id, pw);
+            };
+
+            return (
+                <div className="flex-1 flex items-center justify-center p-6 min-h-screen fade-in">
+                    <div className="w-full max-w-sm p-8 bg-white border border-slate-200 rounded-2xl shadow-xl text-center">
+                        <div className="mb-8">
+                            <h1 className="text-2xl font-black italic text-slate-900">METARICH</h1>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Partners Portal v5.96</p>
+                        </div>
+                        <div className="space-y-4 text-left">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">ID (사번)</label>
+                                <input 
+                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold mt-1 outline-none focus:ring-2 focus:ring-blue-500 transition-colors" 
+                                    placeholder="사번 입력" 
+                                    value={id} 
+                                    onChange={e=>setId(e.target.value)} 
+                                    onKeyDown={handleKeyDown}
+                                    autoFocus
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Password</label>
+                                <input 
+                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold mt-1 outline-none focus:ring-2 focus:ring-blue-500 transition-colors" 
+                                    type="password" 
+                                    placeholder="비밀번호 입력" 
+                                    value={pw} 
+                                    onChange={e=>setPw(e.target.value)} 
+                                    onKeyDown={handleKeyDown}
+                                />
+                            </div>
+                            <button 
+                                onClick={()=>onLogin(id, pw)} 
+                                disabled={loading}
+                                className="w-full py-4 bg-slate-900 text-white rounded-xl font-black mt-2 shadow-lg active:scale-[0.98] transition-all flex justify-center items-center gap-2"
+                            >
+                                {loading && <RefreshCw size={14} className="animate-spin"/>}
+                                <span>{loading ? "로그인 중..." : "로그인"}</span>
+                            </button>
+                        </div>
+                        {!API_URL && (
+                            <div className="mt-6 bg-blue-50 p-4 rounded-xl text-left border border-blue-100">
+                                <p className="text-[10px] text-blue-500 font-black mb-2 uppercase flex items-center gap-1"><AlertCircle size={10}/> 테스트 계정 안내</p>
+                                <div className="space-y-1 text-xs font-bold text-slate-600">
+                                    <p>• 영업자: <strong>test</strong> / <strong>test</strong></p>
+                                    <p>• 지점장: <strong>manager</strong> / <strong>manager</strong></p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // 2. 메인 대시보드
+        const MainDashboard = ({ dbInventory, applyHistory }) => {
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+                            <p className="text-[10px] text-slate-400 font-black uppercase">나의 DB</p>
+                            <div className="flex items-center justify-between mt-2">
+                                <p className="text-3xl font-black text-blue-600">{dbInventory.length}</p>
+                                <Database className="text-slate-200" size={32}/>
+                            </div>
+                        </div>
+                        <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+                            <p className="text-[10px] text-slate-400 font-black uppercase">신청 대기</p>
+                            <div className="flex items-center justify-between mt-2">
+                                <p className="text-3xl font-black text-slate-600">{applyHistory.length}</p> 
+                                <Clock className="text-slate-200" size={32}/>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <h3 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2">
+                            <Clock size={16} className="text-blue-600"/> 최근 배정 목록
+                        </h3>
+                        <div className="divide-y divide-slate-50">
+                            {dbInventory.length > 0 ? dbInventory.slice(0, 5).map(db => (
+                                <div key={db.id} className="flex items-center justify-between py-4">
+                                    <div>
+                                        <span className="text-sm font-black text-slate-800 block">{db.customerName}</span>
+                                        <span className="text-[10px] text-slate-400 font-mono">{db.date ? db.date.split('T')[0] : '-'} | {db.type}</span>
+                                    </div>
+                                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{db.status}</span>
+                                </div>
+                            )) : (
+                                <p className="text-center text-xs text-slate-300 py-10 font-bold italic">배정된 데이터가 없습니다.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 3. DB 신청 (안전한 초기화 로직 적용)
+        const DBApplyView = ({ onApply, loading, applyHistory, dbTypes }) => {
+            const [form, setForm] = React.useState({ type: '', qty: 1 });
+            const [selectedHistory, setSelectedHistory] = React.useState(null);
+            
+            // dbTypes 로드 시 기본값 설정
+            React.useEffect(() => {
+                if (dbTypes && dbTypes.length > 0 && !form.type) {
+                    setForm(prev => ({ ...prev, type: dbTypes[0].name }));
+                }
+            }, [dbTypes]);
+
+            // 안전한 데이터 참조
+            const selectedDBInfo = React.useMemo(() => {
+                if (!Array.isArray(dbTypes) || dbTypes.length === 0) return null;
+                return dbTypes.find(d => d.name === form.type) || dbTypes[0];
+            }, [dbTypes, form.type]);
+
+            const totalPrice = React.useMemo(() => {
+                if (!selectedDBInfo || typeof selectedDBInfo.price !== 'number') return "0";
+                return (selectedDBInfo.price * form.qty).toLocaleString();
+            }, [selectedDBInfo, form.qty]);
+
+            const handleQtyChange = (e) => {
+                const val = parseInt(e.target.value, 10);
+                if (isNaN(val) || val < 1) {
+                    setForm(prev => ({ ...prev, qty: 1 }));
+                } else {
+                    setForm(prev => ({ ...prev, qty: val }));
+                }
+            };
+
+            const handleApply = () => {
+                if (!selectedDBInfo) {
+                    alert('상품 정보를 불러올 수 없습니다.');
+                    return;
+                }
+                onApply({ 
+                    ...form, 
+                    pricePerUnit: selectedDBInfo.price, 
+                    totalAmount: selectedDBInfo.price * form.qty 
+                });
+                alert('신청이 완료 되었습니다.');
+            };
+
+            // 데이터 로딩 중이거나 없을 때 처리
+            if (!selectedDBInfo) {
+                return <div className="p-10 text-center text-slate-400">상품 정보를 불러오는 중입니다...</div>;
+            }
+
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Send size={20}/></div>
+                            <div>
+                                <h3 className="text-lg font-black text-slate-800">DB 신청</h3>
+                                <p className="text-xs text-slate-400 font-bold">신규 가망 고객 배정 요청</p>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase">DB 종류</label>
+                                <select 
+                                    className="w-full p-3 border rounded-lg text-sm font-bold mt-1 bg-white outline-none focus:ring-2 focus:ring-blue-500" 
+                                    value={form.type} 
+                                    onChange={e=>setForm({...form, type:e.target.value})}
+                                >
+                                    {dbTypes.map(type => <option key={type.code} value={type.name}>{type.name}</option>)}
+                                </select>
+                                
+                                <div className="mt-3 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                    <div className="flex justify-between items-center text-xs mb-2">
+                                        <span className="text-slate-500 font-bold">단가</span>
+                                        <span className="font-black text-slate-800 text-sm">{(selectedDBInfo.price).toLocaleString()}원</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-slate-500 font-bold">프로모션</span>
+                                        <span className="font-black text-blue-600 text-right max-w-[200px] truncate">{selectedDBInfo.promotion || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase">수량</label>
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    className="w-full p-3 border rounded-lg text-sm font-bold mt-1 outline-none focus:ring-2 focus:ring-blue-500" 
+                                    value={form.qty} 
+                                    onChange={handleQtyChange}
+                                />
+                            </div>
+                            <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                                <span className="text-xs font-black text-slate-500">총 예상 금액</span>
+                                <span className="text-xl font-black text-rose-500">{totalPrice}원</span>
+                            </div>
+                            <button 
+                                onClick={handleApply} 
+                                disabled={loading} 
+                                className="w-full py-4 bg-slate-900 text-white rounded-lg font-black text-sm mt-4 shadow-lg hover:bg-black transition-all"
+                            >
+                                {loading ? "처리 중..." : "신청하기"}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 신청 내역 로그 */}
+                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <div className="p-4 border-b bg-slate-50 font-black text-xs text-slate-500 uppercase flex justify-between items-center">
+                            <span>최근 신청 내역</span>
+                            <span className="text-[10px] text-slate-400">Click for details</span>
+                        </div>
+                        <div className="divide-y text-slate-700 max-h-60 overflow-y-auto">
+                            {applyHistory.map((log, i) => (
+                                <div key={i} className="p-4 flex justify-between items-center text-sm cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => setSelectedHistory(log)}>
+                                    <div>
+                                        <span className="font-bold text-slate-700 block">{log.type} {log.qty}개</span>
+                                        <span className="text-[10px] text-slate-400 font-mono">{log.date}</span>
+                                    </div>
+                                    <span className={`text-[10px] px-2 py-1 rounded font-bold ${log.paymentStatus === '결제완료' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-500'}`}>
+                                        {log.paymentStatus || '결제전'}
+                                    </span>
+                                </div>
+                            ))}
+                            {applyHistory.length === 0 && <div className="p-8 text-center text-xs text-slate-300 italic">신청 내역이 없습니다.</div>}
+                        </div>
+                    </div>
+
+                    {/* 신청 내역 상세 모달 */}
+                    {selectedHistory && (
+                        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in">
+                            <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+                                <h3 className="font-black text-lg mb-4 flex justify-between items-center">
+                                    신청 상세 정보
+                                    <button onClick={() => setSelectedHistory(null)}><X size={20} className="text-slate-400"/></button>
+                                </h3>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">DB 종류</span> <span className="font-bold">{selectedHistory.type}</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">수량</span> <span className="font-bold">{selectedHistory.qty}개</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">총 금액</span> <span className="font-bold text-blue-600">{(selectedHistory.totalAmount || 0).toLocaleString()}원</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">결제된 금액</span> <span className="font-bold text-emerald-600">{(selectedHistory.paidAmount || 0).toLocaleString()}원</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">결제 방법</span> <span className="font-bold">{selectedHistory.method || '미지정'}</span></div>
+                                    <div className="flex justify-between items-center pt-1"><span className="text-slate-500 font-bold">상태</span> <span className={`px-2 py-0.5 rounded text-xs font-bold text-white ${selectedHistory.paymentStatus==='결제완료'?'bg-emerald-500':'bg-rose-500'}`}>{selectedHistory.paymentStatus || '결제전'}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 4. DB 관리 (다이나믹 목록 오류 수정 - 안전한 배열 생성)
+        const DBManageView = ({ dbInventory, applyHistory, onSaveMemo, onUpdateStatus, dbTypes }) => {
+            const [filterType, setFilterType] = React.useState('전체');
+            const [search, setSearch] = React.useState({ name: '', phone: '', date: '', status: '' });
+            const [selectedDB, setSelectedDB] = React.useState(null);
+            const [memo, setMemo] = React.useState('');
+
+            // [통계] 배정된 수량
+            const assignStats = React.useMemo(() => {
+                const stats = {};
+                if(Array.isArray(dbInventory)) {
+                    dbInventory.forEach(d => { stats[d.type] = (stats[d.type] || 0) + 1; });
+                }
+                return stats;
+            }, [dbInventory]);
+
+            // [통계] 신청한 수량
+            const requestStats = React.useMemo(() => {
+                const stats = {};
+                if(Array.isArray(applyHistory)) {
+                    applyHistory.forEach(a => { stats[a.type] = (stats[a.type] || 0) + parseInt(a.qty || 0); });
+                }
+                return stats;
+            }, [applyHistory]);
+
+            const totalAssigned = Array.isArray(dbInventory) ? dbInventory.length : 0;
+            const totalRequested = Array.isArray(applyHistory) ? applyHistory.reduce((acc, cur) => acc + parseInt(cur.qty || 0), 0) : 0;
+
+            // [안전한 목록 생성] dbTypes가 없을 경우를 대비
+            const allTypes = React.useMemo(() => {
+                const typesFromDB = Array.isArray(dbTypes) ? dbTypes.map(t => t.name) : [];
+                const typesFromAssign = Object.keys(assignStats);
+                const typesFromRequest = Object.keys(requestStats);
+                return [...new Set([...typesFromDB, ...typesFromAssign, ...typesFromRequest])];
+            }, [dbTypes, assignStats, requestStats]);
+
+            const filteredDBs = (dbInventory || []).filter(d => {
+                const matchesType = filterType === '전체' || d.type === filterType;
+                const matchesName = !search.name || d.customerName.includes(search.name);
+                const matchesPhone = !search.phone || (d.phone && d.phone.includes(search.phone));
+                const matchesDate = !search.date || (d.date && d.date.includes(search.date));
+                const matchesStatus = !search.status || d.status.includes(search.status);
+                return matchesType && matchesName && matchesPhone && matchesDate && matchesStatus;
+            });
+
+            const openDetail = (db) => {
+                setSelectedDB(db);
+                setMemo('');
+            };
+
+            const saveLog = () => {
+                if(!memo.trim()) return;
+                const timestamp = new Date().toLocaleString();
+                const newEntry = `[${timestamp}] ${memo}`;
+                const updatedMemo = selectedDB.memos ? `${selectedDB.memos}\n${newEntry}` : newEntry;
+                onSaveMemo(selectedDB.id, updatedMemo);
+                setSelectedDB({...selectedDB, memos: updatedMemo});
+                setMemo('');
+            };
+
+            const changeStatus = (e) => {
+                const newStatus = e.target.value;
+                onUpdateStatus(selectedDB.id, newStatus);
+                setSelectedDB({...selectedDB, status: newStatus});
+            };
+
+            return (
+                <div className="space-y-4 fade-in">
+                    {/* [현황 요약 및 다이나믹 목록] */}
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex justify-between items-center mb-4 border-b pb-3">
+                            <h3 className="font-black text-slate-800 text-sm flex items-center gap-2">
+                                <Database size={16} className="text-blue-600"/> DB 현황 요약
+                            </h3>
+                            <div className="text-xs font-bold bg-slate-100 px-3 py-1 rounded-full text-slate-600">
+                                <span className="text-blue-600">배정 {totalAssigned}</span> <span className="text-slate-300">/</span> <span>신청 {totalRequested}</span>
+                            </div>
+                        </div>
+                        
+                        {/* 다이나믹 드롭다운 */}
+                        <div className="relative">
+                            <select 
+                                className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 appearance-none cursor-pointer"
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            >
+                                <option value="전체">전체 보기 (배정 {totalAssigned} / 신청 {totalRequested})</option>
+                                {allTypes.map(type => (
+                                    <option key={type} value={type}>
+                                        {type} (배정 {assignStats[type] || 0} / 신청 {requestStats[type] || 0})
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" size={16}/>
+                        </div>
+                    </div>
+
+                    {/* 상세 검색 필터 */}
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs font-black text-slate-500 flex items-center gap-1"><Search size={12}/> 상세 검색</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <input className="p-2 border rounded text-xs outline-none" placeholder="이름" value={search.name} onChange={e=>setSearch({...search, name:e.target.value})} />
+                            <input className="p-2 border rounded text-xs outline-none" placeholder="연락처" value={search.phone} onChange={e=>setSearch({...search, phone:e.target.value})} />
+                            <input className="p-2 border rounded text-xs outline-none" type="date" value={search.date} onChange={e=>setSearch({...search, date:e.target.value})} />
+                            <input className="p-2 border rounded text-xs outline-none" placeholder="상태" value={search.status} onChange={e=>setSearch({...search, status:e.target.value})} />
+                        </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <table className="w-full text-left text-xs font-bold">
+                            <thead className="bg-slate-50 text-slate-500 border-b">
+                                <tr>
+                                    <th className="p-4">날짜</th>
+                                    <th className="p-4">고객명</th>
+                                    <th className="p-4">종류</th>
+                                    <th className="p-4 text-center">상태</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y text-slate-700">
+                                {filteredDBs.map(db => (
+                                    <tr key={db.id} className="hover:bg-slate-50 cursor-pointer" onClick={()=>openDetail(db)}>
+                                        <td className="p-4 font-mono text-slate-400">{db.date ? db.date.split('T')[0] : '-'}</td>
+                                        <td className="p-4 text-slate-800">{db.customerName}</td>
+                                        <td className="p-4 text-slate-500">{db.type}</td>
+                                        <td className="p-4 text-center"><span className="px-2 py-1 bg-slate-100 rounded text-[10px]">{db.status}</span></td>
+                                    </tr>
+                                ))}
+                                {filteredDBs.length === 0 && <tr><td colSpan="4" className="p-10 text-center text-slate-300 italic">데이터가 없습니다.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* 상세 보기 모달 */}
+                    {selectedDB && (
+                        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in">
+                            <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                                <div className="bg-slate-50 p-4 border-b flex justify-between items-center shrink-0">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2"><User size={16}/> 고객 상세 정보</h3>
+                                    <button onClick={()=>setSelectedDB(null)}><X size={20} className="text-slate-400 hover:text-rose-500"/></button>
+                                </div>
+                                <div className="p-6 space-y-4 overflow-y-auto">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="bg-blue-50 p-2 rounded border border-blue-100">
+                                            <p className="text-[10px] text-blue-400 font-bold uppercase">DB Code</p>
+                                            <p className="text-sm font-mono font-black text-blue-700">{selectedDB.id}</p>
+                                        </div>
+                                        <div className="w-1/2">
+                                            <p className="text-[10px] text-slate-400 font-bold mb-1">진행 상태 변경</p>
+                                            <select className="w-full p-2 border rounded text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:border-blue-500" value={selectedDB.status} onChange={changeStatus}>
+                                                <option>미시도</option>
+                                                <option>연락전</option>
+                                                <option>부재</option>
+                                                <option>거절</option>
+                                                <option>미팅 확정</option>
+                                                <option>취소</option>
+                                                <option>연기</option>
+                                                <option>완료</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div><p className="text-[10px] text-slate-400 font-black">이름</p><p className="font-bold">{selectedDB.customerName}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">연락처</p><p className="font-bold">{selectedDB.phone || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">생년월일</p><p className="font-bold">{selectedDB.dob || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">성별</p><p className="font-bold">{selectedDB.gender || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">지역</p><p className="font-bold">{selectedDB.area || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">기타1</p><p className="font-bold">{selectedDB.etc1 || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">기타2</p><p className="font-bold">{selectedDB.etc2 || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">기타3</p><p className="font-bold">{selectedDB.etc3 || '-'}</p></div>
+                                        <div><p className="text-[10px] text-slate-400 font-black">기타4</p><p className="font-bold">{selectedDB.etc4 || '-'}</p></div>
+                                    </div>
+                                    <div className="pt-4 border-t">
+                                        <p className="text-[10px] text-slate-400 font-black mb-2">메모 로그</p>
+                                        <div className="bg-slate-50 p-3 rounded-lg text-xs text-slate-600 h-32 overflow-y-auto whitespace-pre-wrap mb-2 border border-slate-100 flex flex-col-reverse">
+                                            {selectedDB.memos || "기록된 메모가 없습니다."}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input className="flex-1 p-2 border rounded-lg text-xs outline-none focus:border-blue-500" placeholder="새로운 메모 입력..." value={memo} onChange={e=>setMemo(e.target.value)} />
+                                            <button onClick={saveLog} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-black hover:bg-blue-700">저장</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 5. 팀 DB 관리
+        const TeamManageView = ({ teamDBs }) => {
+            const [filterType, setFilterType] = React.useState('전체');
+            const [filterMember, setFilterMember] = React.useState('전체');
+            const [search, setSearch] = React.useState({ name: '', phone: '', status: '' });
+            const [selectedDB, setSelectedDB] = React.useState(null);
+
+            const teamMembers = [...new Set(teamDBs.map(d => d.partnerName))];
+
+            const filteredDBs = teamDBs.filter(d => 
+                (filterType === '전체' || d.type === filterType) &&
+                (filterMember === '전체' || d.partnerName === filterMember) &&
+                (!search.name || d.customerName.includes(search.name)) &&
+                (!search.phone || (d.phone && d.phone.includes(search.phone))) &&
+                (!search.status || d.status.includes(search.status))
+            );
+
+            return (
+                <div className="space-y-4 fade-in">
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-black text-slate-800 border-b pb-2">
+                            <Users2 size={18} className="text-emerald-600"/> 
+                            <span>팀원 DB 현황</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <select className="flex-1 p-2 border rounded-lg text-xs font-bold outline-none" value={filterType} onChange={e=>setFilterType(e.target.value)}>
+                                <option value="전체">전체 종류</option>
+                                <option>보장분석</option>
+                                <option>운전자보험</option>
+                                <option>재가보험</option>
+                                <option>펫보험</option>
+                            </select>
+                            <select className="flex-1 p-2 border rounded-lg text-xs font-bold outline-none" value={filterMember} onChange={e=>setFilterMember(e.target.value)}>
+                                <option value="전체">전체 팀원</option>
+                                {teamMembers.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <input className="p-2 border rounded text-xs outline-none" placeholder="고객명" value={search.name} onChange={e=>setSearch({...search, name:e.target.value})} />
+                            <input className="p-2 border rounded text-xs outline-none" placeholder="연락처" value={search.phone} onChange={e=>setSearch({...search, phone:e.target.value})} />
+                            <input className="p-2 border rounded text-xs outline-none" placeholder="상태" value={search.status} onChange={e=>setSearch({...search, status:e.target.value})} />
+                        </div>
+                    </div>
+
+                    <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                        <table className="w-full text-left text-xs font-bold">
+                            <thead className="bg-slate-50 text-slate-500 border-b">
+                                <tr>
+                                    <th className="p-4">팀원</th>
+                                    <th className="p-4">고객명</th>
+                                    <th className="p-4">종류</th>
+                                    <th className="p-4">상태</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y text-slate-700">
+                                {filteredDBs.map(db => (
+                                    <tr key={db.id} className="hover:bg-slate-50 cursor-pointer" onClick={()=>setSelectedDB(db)}>
+                                        <td className="p-4 text-emerald-600">{db.partnerName}</td>
+                                        <td className="p-4 text-slate-800">{db.customerName}</td>
+                                        <td className="p-4 text-slate-500">{db.type}</td>
+                                        <td className="p-4"><span className="px-2 py-1 bg-slate-100 rounded text-[10px]">{db.status}</span></td>
+                                    </tr>
+                                ))}
+                                {filteredDBs.length === 0 && <tr><td colSpan="4" className="p-10 text-center text-slate-300 italic">데이터가 없습니다.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {selectedDB && (
+                        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in">
+                            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6">
+                                <h3 className="font-black text-slate-800 mb-4 flex justify-between">
+                                    <span>상세 정보 (Read Only)</span>
+                                    <button onClick={()=>setSelectedDB(null)}><X size={18} className="text-slate-400"/></button>
+                                </h3>
+                                <div className="space-y-2 text-sm text-slate-600">
+                                    <p><strong>DB Code:</strong> {selectedDB.id}</p>
+                                    <p><strong>담당자:</strong> {selectedDB.partnerName}</p>
+                                    <p><strong>고객명:</strong> {selectedDB.customerName}</p>
+                                    <p><strong>연락처:</strong> {selectedDB.phone}</p>
+                                    <p><strong>메모:</strong> {selectedDB.memos || '없음'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 6. DB 반품 (리스트 클릭 시 상세 보기)
+        const DBReturnView = ({ dbInventory, returnRequests, onRequestReturn }) => {
+            const [form, setForm] = React.useState({ type: '보장분석', dbCode: '', customerName: '', contact: '', reason: '' });
+            const [selectedReturn, setSelectedReturn] = React.useState(null);
+            
+            const handleSubmit = () => {
+                if(!form.dbCode || !form.reason || !form.customerName) return alert("필수 정보를 입력해주세요.");
+                onRequestReturn(form);
+                setForm({ type: '보장분석', dbCode: '', customerName: '', contact: '', reason: '' });
+            };
+
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2"><RotateCcw size={20}/> 반품 신청</h3>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase">DB 종류</label>
+                                <select className="w-full p-3 border rounded-lg text-sm font-bold mt-1 bg-white outline-none" value={form.type} onChange={e=>setForm({...form, type:e.target.value})}>
+                                    <option>보장분석</option>
+                                    <option>운전자보험</option>
+                                    <option>재가보험</option>
+                                    <option>펫보험</option>
+                                    <option>법인컨설팅</option>
+                                </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase">DB 고유코드</label>
+                                    <input className="w-full p-3 border rounded-lg text-sm font-bold mt-1 outline-none" placeholder="DB-XXXX" value={form.dbCode} onChange={e=>setForm({...form, dbCode:e.target.value})}/>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase">고객명</label>
+                                    <input className="w-full p-3 border rounded-lg text-sm font-bold mt-1 outline-none" placeholder="이름 입력" value={form.customerName} onChange={e=>setForm({...form, customerName:e.target.value})}/>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase">연락처</label>
+                                <input className="w-full p-3 border rounded-lg text-sm font-bold mt-1 outline-none" placeholder="010-XXXX-XXXX" value={form.contact} onChange={e=>setForm({...form, contact:e.target.value})}/>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase">반품 사유</label>
+                                <textarea className="w-full p-3 border rounded-lg text-sm font-bold mt-1 h-24 outline-none" placeholder="사유를 상세히 입력하세요." value={form.reason} onChange={e=>setForm({...form, reason:e.target.value})}></textarea>
+                            </div>
+                            <button onClick={handleSubmit} className="w-full py-3 bg-rose-500 text-white rounded-lg font-black text-sm hover:bg-rose-600 transition-colors">신청하기</button>
+                        </div>
+                    </div>
+
+                    <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                        <div className="p-4 border-b bg-slate-50 font-black text-xs text-slate-500 uppercase">신청 내역</div>
+                        <div className="divide-y text-slate-700">
+                            {returnRequests.map((req, i) => (
+                                <div key={i} className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50" onClick={()=>setSelectedReturn(req)}>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800">{req.customerName} <span className="text-xs text-slate-400 font-normal">({req.dbCode})</span></p>
+                                        <p className="text-xs text-slate-500 truncate max-w-[200px]">{req.reason}</p>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded text-[10px] font-bold ${req.status==='승인'?'bg-emerald-100 text-emerald-600':req.status==='반려'?'bg-rose-100 text-rose-600':'bg-amber-100 text-amber-600'}`}>{req.status}</span>
+                                </div>
+                            ))}
+                            {returnRequests.length === 0 && <div className="p-10 text-center text-xs text-slate-300 italic">내역이 없습니다.</div>}
+                        </div>
+                    </div>
+
+                    {/* 반품 상세 모달 */}
+                    {selectedReturn && (
+                        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in">
+                            <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+                                <h3 className="font-black text-lg mb-4 flex justify-between items-center">
+                                    반품 신청 상세
+                                    <button onClick={()=>setSelectedReturn(null)}><X size={20} className="text-slate-400"/></button>
+                                </h3>
+                                <div className="space-y-3 text-sm text-slate-700">
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">종류</span> <span>{selectedReturn.type}</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">코드</span> <span>{selectedReturn.dbCode}</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">고객명</span> <span>{selectedReturn.customerName}</span></div>
+                                    <div className="flex justify-between border-b pb-2"><span className="text-slate-500 font-bold">연락처</span> <span>{selectedReturn.contact || '-'}</span></div>
+                                    <div>
+                                        <span className="text-slate-500 font-bold block mb-1">반품 사유</span>
+                                        <div className="bg-slate-50 p-2 rounded text-xs">{selectedReturn.reason}</div>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2">
+                                        <span className="text-slate-500 font-bold">처리 상태</span>
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${selectedReturn.status==='승인'?'bg-emerald-100 text-emerald-600':selectedReturn.status==='반려'?'bg-rose-100 text-rose-600':'bg-amber-100 text-amber-600'}`}>{selectedReturn.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 7. 결제 관리 (월별 통계 추가)
+        const PaymentManageView = ({ applyHistory, dbTypes }) => {
+            const [filterType, setFilterType] = React.useState('전체');
+            const [selectedPayment, setSelectedPayment] = React.useState(null);
+            const [method, setMethod] = React.useState('카드결제');
+            const [memo, setMemo] = React.useState('');
+            // 월 선택 state
+            const [targetMonth, setTargetMonth] = React.useState(new Date().toISOString().slice(0, 7));
+
+            const changeMonth = (offset) => {
+                const d = new Date(targetMonth + "-01");
+                d.setMonth(d.getMonth() + offset);
+                setTargetMonth(d.toISOString().slice(0, 7));
+            };
+
+            const filteredHistory = applyHistory.filter(h => {
+                const dateMatch = h.date && h.date.startsWith(targetMonth);
+                const typeMatch = filterType === '전체' || h.type === filterType;
+                return typeMatch; // 리스트는 전체 보여주되, 월별 통계는 아래에서 별도 계산
+            });
+            
+            // 월별 통계 계산
+            const monthData = applyHistory.filter(h => h.date && h.date.startsWith(targetMonth));
+            const totalBuy = monthData.reduce((acc, cur) => acc + (cur.totalAmount || 0), 0);
+            const totalPaid = monthData.reduce((acc, cur) => acc + (cur.paidAmount || 0), 0);
+            const totalUnpaid = totalBuy - totalPaid;
+
+            const handleConfirm = () => {
+                alert(`[관리자 전송] 결제 확인 요청\n금액: ${selectedPayment.totalAmount.toLocaleString()}원\n방법: ${method}`);
+                setSelectedPayment(null);
+            };
+
+            return (
+                <div className="space-y-6 fade-in">
+                    {/* 월별 통계 카드 */}
+                    <div className="bg-slate-900 p-5 rounded-xl text-white shadow-lg">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-black flex items-center gap-2"><Wallet size={18}/> 월별 결제 현황</h3>
+                            <div className="flex items-center gap-3 bg-slate-800 p-1 rounded-lg">
+                                <button onClick={()=>changeMonth(-1)} className="p-1 hover:text-blue-400"><ChevronLeft size={16}/></button>
+                                <span className="text-sm font-bold">{targetMonth}</span>
+                                <button onClick={()=>changeMonth(1)} className="p-1 hover:text-blue-400"><ChevronRight size={16}/></button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                            <div className="bg-slate-800 p-3 rounded-lg">
+                                <p className="text-[10px] text-slate-400 mb-1">총 구입 금액</p>
+                                <p className="font-bold text-lg">{totalBuy.toLocaleString()}</p>
+                            </div>
+                            <div className="bg-slate-800 p-3 rounded-lg">
+                                <p className="text-[10px] text-slate-400 mb-1">결제 완료</p>
+                                <p className="font-bold text-lg text-emerald-400">{totalPaid.toLocaleString()}</p>
+                            </div>
+                            <div className="bg-slate-800 p-3 rounded-lg">
+                                <p className="text-[10px] text-slate-400 mb-1">미납 금액</p>
+                                <p className="font-bold text-lg text-rose-400">{totalUnpaid.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                        <span className="text-xs font-black text-slate-500">결제 내역 리스트</span>
+                        <select className="p-2 border rounded-lg text-xs font-bold outline-none" value={filterType} onChange={e=>setFilterType(e.target.value)}>
+                            <option value="전체">전체 보기</option>
+                            {dbTypes.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                        <table className="w-full text-left text-xs font-bold">
+                            <thead className="bg-slate-50 text-slate-500 border-b">
+                                <tr>
+                                    <th className="p-4">날짜</th>
+                                    <th className="p-4">내용</th>
+                                    <th className="p-4 text-right">금액</th>
+                                    <th className="p-4 text-center">상태</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y text-slate-700">
+                                {filteredHistory.map((item, i) => (
+                                    <tr key={i} className="hover:bg-slate-50 cursor-pointer" onClick={()=>setSelectedPayment(item)}>
+                                        <td className="p-4 font-mono text-slate-400">{item.date}</td>
+                                        <td className="p-4">{item.type} ({item.qty}개)</td>
+                                        <td className="p-4 text-right">{(item.totalAmount || 0).toLocaleString()}</td>
+                                        <td className="p-4 text-center"><span className={`px-2 py-1 rounded text-[10px] ${item.paymentStatus==='결제완료'?'bg-emerald-100 text-emerald-600':'bg-rose-100 text-rose-500'}`}>{item.paymentStatus || '미납'}</span></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* 결제 상세/입력 모달 */}
+                    {selectedPayment && (
+                        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in">
+                            <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+                                <h3 className="font-black text-lg mb-4 flex justify-between items-center">
+                                    결제 처리
+                                    <button onClick={()=>setSelectedPayment(null)}><X size={20} className="text-slate-400"/></button>
+                                </h3>
+                                <div className="space-y-4 text-sm">
+                                    <div className="bg-slate-50 p-3 rounded border">
+                                        <div className="flex justify-between mb-1"><span className="text-slate-500">결제할 금액</span><span className="font-bold text-lg">{(selectedPayment.totalAmount || 0).toLocaleString()}원</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">기납부 금액</span><span className="font-bold text-emerald-600">{(selectedPayment.paidAmount || 0).toLocaleString()}원</span></div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 block mb-1">결제 방법 선택</label>
+                                        <select className="w-full p-2 border rounded font-bold" value={method} onChange={e=>setMethod(e.target.value)}>
+                                            <option>카드결제</option>
+                                            <option>계좌이체</option>
+                                            <option>기타 (메모)</option>
+                                        </select>
+                                    </div>
+
+                                    {method === '계좌이체' && (
+                                        <div className="bg-blue-50 p-3 rounded border border-blue-100 text-xs text-blue-700">
+                                            <p className="font-black mb-1">입금 계좌 정보</p>
+                                            <p>하나은행 000-111-1111-222</p>
+                                            <p>(주)파트너스컴퍼니</p>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 block mb-1">메모 (선택)</label>
+                                        <textarea className="w-full p-2 border rounded text-xs h-16 outline-none" placeholder="입금자명 등 특이사항" value={memo} onChange={e=>setMemo(e.target.value)}></textarea>
+                                    </div>
+
+                                    <button onClick={handleConfirm} className="w-full py-3 bg-slate-900 text-white rounded-lg font-black mt-2">결제 확인 요청 (관리자 전송)</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 8. 마이페이지
+        const MyPageView = ({ user, onUpdateUser }) => {
+            const [info, setInfo] = React.useState({ ...user, password: '' });
+
+            const handleSave = () => {
+                onUpdateUser(info);
+                alert("정보가 수정되었습니다.");
+            };
+
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">👤</div>
+                        <h2 className="text-xl font-black text-slate-800">{user.name}</h2>
+                        <p className="text-sm text-slate-500">{user.role === 'BRANCH_MANAGER' ? '지점장' : '영업자'} | {user.team}</p>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 className="font-black text-slate-800 flex items-center gap-2"><Settings size={18}/> 정보 수정</h3>
+                        <div className="space-y-3">
+                            <div><label className="text-[10px] text-slate-400 font-black">이름</label><input className="w-full p-3 border rounded-lg text-sm mt-1" value={info.name} onChange={e=>setInfo({...info, name:e.target.value})} /></div>
+                            <div><label className="text-[10px] text-slate-400 font-black">연락처</label><input className="w-full p-3 border rounded-lg text-sm mt-1" placeholder="010-0000-0000" value={info.phone || ''} onChange={e=>setInfo({...info, phone:e.target.value})} /></div>
+                            <div><label className="text-[10px] text-slate-400 font-black">새 비밀번호</label><input className="w-full p-3 border rounded-lg text-sm mt-1" type="password" placeholder="변경할 경우 입력" value={info.password} onChange={e=>setInfo({...info, password:e.target.value})} /></div>
+                            <button onClick={handleSave} className="w-full py-3 bg-slate-900 text-white rounded-lg font-black text-sm mt-2">저장하기</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- [Main App] ---
+        const UserApp = () => {
+            const [view, setView] = React.useState('login');
+            const [activeTab, setActiveTab] = React.useState('dashboard');
+            const [currentUser, setCurrentUser] = React.useState(null);
+            const [loading, setLoading] = React.useState(false);
+
+            // Data States
+            const [dbInventory, setDbInventory] = React.useState([]); 
+            const [applyHistory, setApplyHistory] = React.useState([]); // 신청 내역
+            const [teamDBs, setTeamDBs] = React.useState([]); // 팀원 DB
+            const [returnRequests, setReturnRequests] = React.useState([]); // 반품 내역
+            
+            // 관리자 설정 데이터 (가정)
+            const dbTypes = [
+                { code: 'bo', name: '보장분석', price: 50000, promotion: '신규 10% 추가 지급' },
+                { code: 'un', name: '운전자보험', price: 30000, promotion: '30개 신청 시 5개 무료' },
+                { code: 'ja', name: '재가보험', price: 40000, promotion: '' },
+                { code: 'pt', name: '펫보험', price: 45000, promotion: '' },
+                { code: 'co', name: '법인컨설팅', price: 100000, promotion: '첫 거래 50% 할인' }
+            ];
+
+            const callApi = React.useCallback(async (action, payload = {}) => {
+                if(!API_URL) return { status: 'error', error: 'URL Missing' };
+                try {
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, ...payload }) });
+                    return await res.json();
+                } catch(e) { return { status: 'error' }; }
+            }, []);
+
+            const refreshData = React.useCallback(async () => {
+                if(!API_URL) {
+                    if(currentUser) {
+                        // Mock Data
+                        setDbInventory([
+                            { id: 'DB-001', customerName: '김철수', type: '보장분석', status: '미팅 확정', date: '2024-01-15', phone: '010-1234-5678', area: '서울', gender: '남', etc1: '30대', etc3: '가망고객', memos: '' },
+                            { id: 'DB-002', customerName: '이영희', type: '운전자보험', status: '완료', date: '2024-01-10', phone: '010-9876-5432', area: '경기', gender: '여', etc1: '40대', memos: '가입완료' }
+                        ]);
+                        // 신청 내역에 결제 정보 포함 (날짜 포맷 통일)
+                        setApplyHistory([
+                            { type: '보장분석', qty: 10, date: '2024-01-15', totalAmount: 500000, paidAmount: 0, paymentStatus: '결제전' },
+                            { type: '운전자보험', qty: 5, date: '2024-01-10', totalAmount: 150000, paidAmount: 150000, paymentStatus: '결제완료', method: '카드결제' }
+                        ]);
+                        if(currentUser.role === 'BRANCH_MANAGER') {
+                            setTeamDBs([
+                                { id: 'T-001', partnerName: '김팀원', customerName: '박고객', type: '펫보험', status: '부재', phone:'010-1111-2222', memos:'' },
+                                { id: 'T-002', partnerName: '이팀원', customerName: '최고객', type: '보장분석', status: '연락전', phone:'010-3333-4444', memos:'부재중' }
+                            ]);
+                        }
+                    }
+                    return;
+                }
+                // API Load Logic (To be implemented)
+            }, [currentUser]);
+
+            React.useEffect(() => { if(view === 'dashboard') refreshData(); }, [view, refreshData]);
+
+            const handleLogin = async (id, pw) => {
+                setLoading(true);
+                await new Promise(r=>setTimeout(r, 500));
+                
+                if (id === 'test' && pw === 'test') {
+                    setCurrentUser({ employeeId: 'test', name: '김영업', team: '영업1팀', role: 'SALES' });
+                    setView('dashboard');
+                } else if (id === 'manager' && pw === 'manager') {
+                    setCurrentUser({ employeeId: 'manager', name: '박지점장', team: '영업1팀', role: 'BRANCH_MANAGER' });
+                    setView('dashboard');
+                } else {
+                    alert("로그인 정보 확인 필요");
+                }
+                setLoading(false);
+            };
+
+            const handleLogout = () => { setCurrentUser(null); setView('login'); };
+
+            const handleApply = (form) => {
+                // 신청 로그 추가 (날짜 포맷 YYYY-MM-DD)
+                const today = new Date().toISOString().slice(0,10);
+                const newLog = { 
+                    ...form, 
+                    date: today, 
+                    paymentStatus: '결제전', 
+                    paidAmount: 0 
+                };
+                setApplyHistory(prev => [newLog, ...prev]);
+            };
+
+            const handleSaveMemo = (id, memo) => {
+                setDbInventory(prev => prev.map(d => d.id === id ? { ...d, memos: memo } : d));
+            };
+            
+            const handleUpdateStatus = (id, status) => {
+                setDbInventory(prev => prev.map(d => d.id === id ? { ...d, status: status } : d));
+            };
+
+            const handleReturnRequest = (req) => {
+                setReturnRequests(prev => [...prev, { ...req, status: '검토중' }]);
+                alert("반품 신청이 접수되었습니다.");
+            };
+
+            const handleUpdateUser = (info) => {
+                setCurrentUser({ ...currentUser, ...info });
+            };
+
+            return (
+                <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
+                    {view === 'login' ? (
+                        <LoginView onLogin={handleLogin} loading={loading}/>
+                    ) : (
+                        <div className="flex-1 flex flex-col max-w-md mx-auto bg-white min-h-screen shadow-2xl relative">
+                            <header className="h-16 border-b border-slate-100 flex items-center justify-between px-6 bg-white sticky top-0 z-10">
+                                <div>
+                                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Meta v5.96</p>
+                                    <h1 className="font-black italic text-lg uppercase text-slate-800">{activeTab}</h1>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs font-bold bg-slate-50 text-slate-600 px-3 py-1 rounded-full flex items-center gap-1 border border-slate-100">
+                                        <User size={12}/> {currentUser.name}
+                                    </span>
+                                    <button onClick={()=>setActiveTab('mypage')} className="text-slate-400 hover:text-blue-600"><Settings size={18}/></button>
+                                    <button onClick={handleLogout} className="text-slate-400 hover:text-rose-500"><LogOut size={18}/></button>
+                                </div>
+                            </header>
+
+                            <div className="flex-1 p-6 overflow-y-auto pb-24 bg-[#F8FAFC]">
+                                {activeTab === 'dashboard' && <MainDashboard dbInventory={dbInventory} applyHistory={applyHistory}/>}
+                                {activeTab === 'manage' && <DBManageView dbInventory={dbInventory} applyHistory={applyHistory} onSaveMemo={handleSaveMemo} onUpdateStatus={handleUpdateStatus} dbTypes={dbTypes}/>}
+                                {activeTab === 'apply' && <DBApplyView onApply={handleApply} loading={loading} applyHistory={applyHistory} dbTypes={dbTypes}/>}
+                                {activeTab === 'team' && <TeamManageView teamDBs={teamDBs}/>}
+                                {activeTab === 'return' && <DBReturnView dbInventory={dbInventory} returnRequests={returnRequests} onRequestReturn={handleReturnRequest}/>}
+                                {activeTab === 'payment' && <PaymentManageView applyHistory={applyHistory} dbTypes={dbTypes}/>}
+                                {activeTab === 'mypage' && <MyPageView user={currentUser} onUpdateUser={handleUpdateUser}/>}
+                            </div>
+
+                            <nav className="h-20 border-t border-slate-100 flex justify-around items-center text-[10px] font-black text-slate-400 bg-white fixed bottom-0 w-full max-w-md z-20 overflow-x-auto px-2">
+                                <button onClick={()=>setActiveTab('dashboard')} className={`flex flex-col items-center gap-1 min-w-[50px] ${activeTab==='dashboard'?'text-blue-600':''}`}><LayoutDashboard size={20}/>홈</button>
+                                <button onClick={()=>setActiveTab('apply')} className={`flex flex-col items-center gap-1 min-w-[50px] ${activeTab==='apply'?'text-blue-600':''}`}><Send size={20}/>신청</button>
+                                <button onClick={()=>setActiveTab('manage')} className={`flex flex-col items-center gap-1 min-w-[50px] ${activeTab==='manage'?'text-blue-600':''}`}><Database size={20}/>DB관리</button>
+                                <button onClick={()=>setActiveTab('payment')} className={`flex flex-col items-center gap-1 min-w-[50px] ${activeTab==='payment'?'text-blue-600':''}`}><Wallet size={20}/>결제</button>
+                                {currentUser.role === 'BRANCH_MANAGER' && (
+                                    <button onClick={()=>setActiveTab('team')} className={`flex flex-col items-center gap-1 min-w-[50px] ${activeTab==='team'?'text-blue-600':''}`}><Users2 size={20}/>팀관리</button>
+                                )}
+                                <button onClick={()=>setActiveTab('return')} className={`flex flex-col items-center gap-1 min-w-[50px] ${activeTab==='return'?'text-blue-600':''}`}><RotateCcw size={20}/>반품</button>
+                            </nav>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<UserApp />);
+    </script>
+</body>
+</html>
